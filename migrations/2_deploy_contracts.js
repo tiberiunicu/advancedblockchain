@@ -1,11 +1,11 @@
 const ComposableToken = artifacts.require("ComposableToken");
 const MerkleDistributor = artifacts.require("MerkleDistributor");
 
-module.exports = function (deployer,network,accounts) {
-  deployer.deploy(ComposableToken);
-//   const composableToken = ComposableToken.deplyed();
+module.exports = async function (deployer,network,accounts)  {
+  await deployer.deploy(ComposableToken);
+  const composableToken = await ComposableToken.deployed();
 
-  deployer.deploy(MerkleDistributor);
+  await deployer.deploy(MerkleDistributor,composableToken.address);
 //   const merkleDistributor = MerkleDistributor.deplyed();
     
 };

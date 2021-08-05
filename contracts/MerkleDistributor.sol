@@ -1,10 +1,11 @@
-//SPDX-License-Identifier: UNLICENSED
+//SPDX-License-Identifier: MIT
 pragma solidity >=0.4.22 <0.9.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+// import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./ComposableToken.sol";
 
 contract MerkleDistributor {
-    address public token;
+    ComposableToken public token;
     address public owner;
     mapping(address=>uint) public unclaimedToken;
     mapping(address=>uint) public claimedToken;
@@ -19,13 +20,18 @@ contract MerkleDistributor {
         uint indexed amount
     );
     
-    constructor (){
-        owner = msg.sender;
+    modifier OnlyOwner(){
+        require(msg.sender == owner,'Only owner');
+        _;
     }
-    
-    function addUnclaimedToken(address user, uint amount) public {
-        require(msg.sender == owner, 'Only owner can add tokens');
-        require(amount <= IERC20(token).totalSupply(), 'amount greater than total supply');
+
+    constructor (ComposableToken _token)  {
+        owner = msg.sender;
+        token = _token;
+    }
+
+    function addUnclaimedToken(address user, uint amount) public OnlyOwner{
+        require(amount <= token.totalSupply(), 'amount greater than total supply');
         unclaimedToken[user] = unclaimedToken[user] + amount;
         emit UnclaimedTokenAdded(user, amount);
     
@@ -37,7 +43,7 @@ contract MerkleDistributor {
         unclaimedToken[msg.sender] = unclaimedToken[msg.sender] - amount;
         claimedToken[msg.sender] += amount;
         emit tokenClaimed(msg.sender, amount);
-        IERC20(token).transfer(msg.sender,amount);
+        token.transfer(msg.sender,amount);
     }
     
     function addBulkUsersUnclaimedToken(address[] calldata users, uint[] calldata amounts) external{
